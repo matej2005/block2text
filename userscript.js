@@ -80,7 +80,11 @@ export default async function ({ addon, console, msg }) {
         }
         nextInput = null
 
+        
       } else { //inner block, more complex
+        if(!isEmpty(block.fields)){//variables menu
+          debug(block.fields["VARIABLE"].name)
+        }
         let inputs = block.inputs//id
         let a
         for (let IN in inputs) {
