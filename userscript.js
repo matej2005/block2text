@@ -7,6 +7,7 @@ export default async function ({ addon, console, msg }) {
   let inputsOPs = ['math_number', 'math_positive_number', "math_whole_number", 'motion_goto_menu', "text", "argument_reporter_string_number"]
   let ignoreBlocks = ["procedures_prototype"]
   let Cblocks = ["control_forever", "control_if", "control_repeat", "control_if_else", "control_repeat_until", "control_while"]
+  let fieldsMenu = ["VARIABLE", "EFFECT"]
   let preventUpdate = false;
   let myTabID = 4;
   const manager = document.createElement("div");
@@ -38,10 +39,10 @@ export default async function ({ addon, console, msg }) {
     if (input === 'math_number' || input === 'math_positive_number' || input === "text") return "(" + value + ")"
   }
   function findTopLevel(sprite) {
-    var TopBlocks = new Array()
+    let TopBlocks = new Array()
     let blocks = sprite.blocks._blocks
     //debug("top ids<")
-    for (var bl in blocks) {
+    for (let bl in blocks) {
       if (blocks[bl].topLevel) {
         //debug(bl)
         TopBlocks[bl] = bl;
@@ -72,17 +73,13 @@ export default async function ({ addon, console, msg }) {
         for (let fl in fieldValue) {
           if (!_Ins) {
             out = fieldValue[fl].value
-
-          }else{
+          } else {
             out = convertInput(block.opcode, fieldValue[fl].value)
-
           }
         }
         nextInput = null
-
-        
       } else { //inner block, more complex
-        if(!isEmpty(block.fields)){//variables menu
+        if (!isEmpty(block.fields)) {//variables menu
           debug(block.fields["VARIABLE"].name)
         }
         let inputs = block.inputs//id
@@ -97,7 +94,6 @@ export default async function ({ addon, console, msg }) {
         out = _opcode + "(" + out + ")"
       }
       return out
-
     }
     function getOneInputCell(_nextInput, _opcode, _Ins) {
       nextInput = _nextInput
@@ -138,8 +134,8 @@ export default async function ({ addon, console, msg }) {
     }
     return null
   }
-  function handleBlockDefinition(_block, sprite) {
-    let blocks = sprite.blocks._blocks;//blocks in sprite
+  function handleBlockDefinition(_block, _sprite) {
+    let blocks = _sprite.blocks._blocks;//blocks in sprite
     let prototype = _block.inputs.custom_block.block
     let mutation = blocks[prototype].mutation
     return "function " + mutation.proccode + "(" + "){"
@@ -160,14 +156,13 @@ export default async function ({ addon, console, msg }) {
       let afterC
       if (Cblocks.includes(opcode)) {//C block
         if ("SUBSTACK" in block.inputs) {
-          text += "\r\n"+"....".repeat(substack) + opcode + "{\r\n"
+          text += "\r\n" + "\tab".repeat(substack) + opcode + "{\r\n"
           substack++//increase counter
           substacks[substack] = new Object //create new object for each substack
           substacks[substack].inside = block.inputs["SUBSTACK"].block//get some values in object
           substacks[substack].next = block.next
           afterC = block.next
           next = block.inputs["SUBSTACK"].block//get next block.id
-
         }
       } else {//normal block
         let inputText = ""
@@ -176,7 +171,7 @@ export default async function ({ addon, console, msg }) {
             inputText += "(" + getInputOfBlock(inputs[IN].block, block, _sprite) + ")"//inputs
           }
         }//each input
-        text += "....".repeat(substack) + opcode + inputText+"\r\n"
+        text += "\tab".repeat(substack) + opcode + inputText + "\r\n"
 
         //text += "\t".repeat(substack) + opcode + "\r\n"
         debug(opcode)
@@ -196,17 +191,15 @@ export default async function ({ addon, console, msg }) {
           }
           //debug("next: "+block.next)
           //text += "" + "\t".repeat(substack) + "}\r\n"
-
           substack--
           if (substack <= 0) {
             substack = 0
           }
-          text += "" + "....".repeat(substack) + "}\r\n"
+          text += "" + "\tab".repeat(substack) + "}\r\n"
           if (substack === 0) {
             break;
           }
         }
-
       }
       if (!a) {
         break
@@ -216,12 +209,11 @@ export default async function ({ addon, console, msg }) {
       }
       a--
     }
-
     debug(text)
     return text
   }
   function printText() {
-    const editingTarget = vm.runtime.getEditingTarget();
+    const editingTarget = vm.runtime.getEditingTarget()
     //debug(vm)
     //let sprite = new Set(vm.runtime.targets.map((i) => i.sprite))
     let sprite = new Set(vm.runtime.targets)
@@ -233,41 +225,53 @@ export default async function ({ addon, console, msg }) {
       sprite = [editingTarget]
     }
     sprite.forEach((_sprite, i) => {//sprites
-      let blocks = _sprite.blocks._blocks
       debug(_sprite.blocks)
       const row = document.createElement("tr")//<tr>
       const SpriteCell = document.createElement("td") //nazev postavy <td>
       SpriteCell.className = "sa-block-to-text-sprite"
       SpriteCell.textContent = _sprite.sprite.name //print sprite name
       row.appendChild(SpriteCell)//</td>
-      const CodeCell = document.createElement("td");  //bunka pro kod <td>
+      const CodeCell = document.createElement("td")  //bunka pro kod <td>
       CodeCell.className = "sa-block-to-text-code"
       CodeCell.textContent = ""
-      row.appendChild(CodeCell);//</td>
-      CodeTable.appendChild(row);//</tr>
-
-      var _scripts = _sprite.blocks._scripts
+      row.appendChild(CodeCell)//</td>
+      CodeTable.appendChild(row)//</tr>
+      let blocks = _sprite.blocks._blocks
+      let _scripts = _sprite.blocks._scripts
       //debug(_scripts)
-      for (var script in _scripts) {
+      for (let script in _scripts) {
         var ID = _scripts[script]
         var inside = false
         var fallback
-        for (var bl in blocks) {//blocks
-          var nextID = blocks[ID].next
-          let block = blocks[ID]
-          var blockOpcode = block.opcode
-          function handleBlock(ID, _sprite) {
-            let text = ""
-            let inputs = block.inputs
-            if (blockOpcode === "procedures_definition") {//handle procedures = custom blocks
-              text += handleBlockDefinition(block, _sprite)
+        for (let bl in blocks) {//blocks
+          function handleBlock(_ID, _sprite) {
+            let block = _sprite.blocks._blocks[_ID]
+            let Block = new Object()  //new system for storing block data
+            Block.id = block.id
+            Block.opcode = block.opcode
+            Block.input = ""
+            Block.next = block.next
+            Block.inputs = block.inputs
+            Block.text = ""
+            Block.top = block.topLevel
+            //Block.input = getInputOfBlock
+            //Block.Cblock = false
+            //Block.script
+            //Block.sprite
+            //Block.
+            debug(Block)
+            if (Block.opcode === "procedures_definition") {//handle procedures = custom blocks
+              Block.text += handleBlockDefinition(block, _sprite)
               inside = true
+              Block.procedure = true
             } else {
-              text += "\r\n";
+              Block.procedure = false
+              Block.text += "\r\n";
               if (inside) {
-                text += ".    .";
+                Block.tabs++
+                Block.text += "\tab";
               }
-              text += blockOpcode
+              Block.text += Block.opcode
               /*if (Cblocks.includes(blockOpcode)) {
                 handleSubstack(block, _sprite)
                 text += "{"
@@ -283,16 +287,30 @@ export default async function ({ addon, console, msg }) {
                 }
               }*/
             }
-            for (var IN in inputs) {
-              if (inputs[IN].name != "SUBSTACK") {
-                text += "(" + getInputOfBlock(inputs[IN].block, block, _sprite) + ")"//inputs
+            if (!isEmpty(block.fields)) {//static menu
+              for (let mn in block.fields) {
+                var sMenu = block.fields[mn]
+                if (fieldsMenu.includes(sMenu.name)) {
+                  Block.menu = "[" + sMenu.value + "]"
+                }
+              }
+              Block.text += Block.menu
+            }
+            for (let IN in Block.inputs) {
+              if (Block.inputs[IN].name != "SUBSTACK") {
+                Block.input += "(" + getInputOfBlock(Block.inputs[IN].block, block, _sprite) + ")"
               }
             }//each input
-            debug("new opcode: " + blockOpcode + ", id: " + ID + ", next: " + nextID + ", top: " + blocks[ID].topLevel + ", fallback: " + fallback + ", inside: " + inside)
-            return text
+            Block.text += Block.input//inputs
+
+            debug("opcode: " + Block.opcode + ", id: " + Block.id + ", next: " + Block.next + ", top: " + blocks[ID].topLevel + ", inside: " + inside)
+            //return Block
+            return Block.text
           }
-          if (!inputsOPs.includes(blockOpcode) || inputsOPs.includes(ignoreBlocks)) {
-            if (Cblocks.includes(blockOpcode)) {
+          let nextID = blocks[ID].next
+          let block = blocks[ID]
+          if (!inputsOPs.includes(block.opcode) || !ignoreBlocks.includes(block.opcode)) {
+            if (Cblocks.includes(block.opcode)) {
               CodeCell.textContent += handleSubstack(block, _sprite)
             } else {
               CodeCell.textContent += handleBlock(ID, _sprite)
@@ -315,7 +333,7 @@ export default async function ({ addon, console, msg }) {
           }
 
         }//each block
-        //if (!--levelCounter) {
+        //if (!--levelCounter) { 
         CodeCell.textContent += "\r\n";
         //}
       }//each top block
@@ -323,15 +341,11 @@ export default async function ({ addon, console, msg }) {
       /*CodeCell.textContent = hljs.highlight(CodeCell.textContent,
         { language: 'js' }
       ).value*/
-
-
-      CodeCell.innerHTML = CodeCell.innerHTML.replace(/\r\n?/g, '<br />');//hack for inserting line break
-
+      CodeCell.innerHTML = CodeCell.innerHTML.replace(/\r\n?/g, '<br />')//hack for inserting line break
+      CodeCell.innerHTML = CodeCell.innerHTML.replace(/\tab?/g, '&emsp;')//hack for inserting tab space
     });//each sprite
     debug("done")
   }
-
-
   function fullReload() {
     if (addon.tab.redux.state?.scratchGui?.editorTab?.activeTabIndex !== myTabID) return;
     translateBlocksToText();
