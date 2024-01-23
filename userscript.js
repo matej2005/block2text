@@ -5,7 +5,7 @@ export default async function ({ addon, console, msg }) {
   const debug = console.log;
   const warn = console.warn;
   const error = console.error;
-  
+
   const OnlyEditingTarget = addon.settings.get("target");
   const EnableTranslation = addon.settings.get("translate")
 
@@ -42,10 +42,10 @@ export default async function ({ addon, console, msg }) {
   textTabText.innerText = msg("code");
   textTab.appendChild(textTabText);
   function translateBlocksToText(opcode) {
-    if (TranslateMap.has(opcode)&&EnableTranslation){
+    if (TranslateMap.has(opcode) && EnableTranslation) {
       return TranslateMap.get(opcode)
-    }else{
-      console.warn("Translation missing: "+opcode+" Please report it in isues https://github.com/matej2005/blocks2text/issues")
+    } else {
+      console.warn("Translation missing: " + opcode + " Please report it in isues https://github.com/matej2005/blocks2text/issues")
       return opcode
     }
   }
@@ -152,7 +152,10 @@ export default async function ({ addon, console, msg }) {
     let blocks = _sprite.blocks._blocks;//blocks in sprite
     let prototype = _block.inputs.custom_block.block
     let mutation = blocks[prototype].mutation
-    return "function " + mutation.proccode + "(" + "){"
+    let out = mutation.proccode.replace(/%s/g, function (match) {
+      return "(" + JSON.parse(mutation.argumentnames).shift() + ")"
+    });
+    return "function " + out + "{"
   }
   function handleSubstack(_block, _sprite) {
     let blocks = _sprite.blocks._blocks;//blocks in sprite
@@ -300,24 +303,25 @@ export default async function ({ addon, console, msg }) {
                   }
                 }
               }*/
-            }
-            if (!isEmpty(block.fields)) {//static menu
-              for (let mn in block.fields) {
-                var sMenu = block.fields[mn]
-                if (fieldsMenu.includes(sMenu.name)) {
-                  Block.menu = "[" + sMenu.value + "]"
-                }else{
-                  console.warn("Unknow value: "+sMenu.name+" Please report it in isues https://github.com/matej2005/blocks2text/issues")
+
+              if (!isEmpty(block.fields)) {//static menu
+                for (let mn in block.fields) {
+                  var sMenu = block.fields[mn]
+                  if (fieldsMenu.includes(sMenu.name)) {
+                    Block.menu = "[" + sMenu.value + "]"
+                  } else {
+                    console.warn("Unknow value: " + sMenu.name + " Please report it in isues https://github.com/matej2005/blocks2text/issues")
+                  }
                 }
+                Block.text += Block.menu
               }
-              Block.text += Block.menu
+              for (let IN in Block.inputs) {
+                if (Block.inputs[IN].name != "SUBSTACK") {
+                  Block.input += "(" + getInputOfBlock(Block.inputs[IN].block, block, _sprite) + ")"
+                }
+              }//each input
+              Block.text += Block.input//inputs
             }
-            for (let IN in Block.inputs) {
-              if (Block.inputs[IN].name != "SUBSTACK") {
-                Block.input += "(" + getInputOfBlock(Block.inputs[IN].block, block, _sprite) + ")"
-              }
-            }//each input
-            Block.text += Block.input//inputs
 
             debug("opcode: " + Block.opcode + ", id: " + Block.id + ", next: " + Block.next + ", top: " + blocks[ID].topLevel + ", inside: " + inside)
             //return Block
