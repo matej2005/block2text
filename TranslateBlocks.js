@@ -1,3 +1,13 @@
+/*
+IDEA 
+    motion_gotoxy -> go to x%i y%i -> go to x() y()
+    var testVariable = 10 / int testVariable = 10;
+    aA-zZ,0-9 ()
+    TRUE, FALSE <>
+    MENU []
+    FUNCTION, for, if, ... {}
+    //comment
+*/
 export default() => {
     const translate = new Map()
     //Motion
@@ -16,8 +26,11 @@ export default() => {
     translate.set("motion_sety", "set y")
     translate.set("motion_ifonedgebounce", "if on edge bounce")
     translate.set("motion_setrotationstyle", "set rotation style")
+    translate.set("motion_xposition","x position")
+    translate.set("motion_yposition","y position")
+    translate.set("motion_direction","direction")
     //Looks
-    translate.set("looks_sayforsecss","say for secs")
+    translate.set("looks_sayforsecs","say for secs")
     translate.set("looks_say","say")
     translate.set("looks_thinkforsecs","think for secs")
     translate.set("looks_think","think")
@@ -34,6 +47,9 @@ export default() => {
     translate.set("looks_hide","hide")
     translate.set("looks_gotofrontback","go to front back")
     translate.set("looks_goforwardbackwardlayers","go forward backward layers")
+    translate.set("looks_costumenumbername","costume number name")
+    translate.set("looks_backdropnumbername","backdrop number name")
+    translate.set("looks_size","size")
     //sound
     translate.set("sound_playuntildone","play until done")
     translate.set("sound_play","play")
@@ -43,6 +59,7 @@ export default() => {
     translate.set("sound_cleareffects","clear effects")
     translate.set("sound_changevolumeby","change volume by")
     translate.set("sound_setvolumeto","set volume to")
+    translate.set("sound_volume","volume")
     //events
     translate.set("event_whenflagclicked","when flag clicked")
     translate.set("event_whenkeypressed","when key pressed")
@@ -64,11 +81,30 @@ export default() => {
     translate.set("sensing_askandwait","ask and wait")
     translate.set("sensing_setdragmode","set drag mode")
     translate.set("sensing_resettimer","reset timer")
+    translate.set("sensing_touchingobject","touching object")
+    translate.set("sensing_touchingcolor","touching color")
+    translate.set("sensing_coloristouchingcolor","color is touching color")
+    translate.set("sensing_distanceto","distance to")
+    translate.set("sensing_answer","answer")
+    translate.set("sensing_mousedown","mouse down?")
+    translate.set("sensing_mousex","mousex")
+    translate.set("sensing_mousey","mousey")
+    translate.set("sensing_loudness","loudness")
+    translate.set("sensing_timer","timer")
+    translate.set("sensing_current","current")
+    translate.set("sensing_dayssince2000","days since 2000")
+    translate.set("sensing_username","username")
+    //math
+    translate.set("operator_length","length")
+    translate.set("operator_letter_of","letter of")
+    translate.set("operator_join","join")
+    translate.set("operator_not","not")
+    translate.set("operator_round","round")
     //variables
     translate.set("data_setvariableto","set variable to")
-    translate.set("data_changevariableby","move")
-    translate.set("show variable","move")
-    translate.set("data_hidevariable","move")
+    translate.set("data_changevariableby","change variable by")
+    translate.set("show variable","show variable")
+    translate.set("data_hidevariable","hide variable")
     //lists
     translate.set("data_addtolist","add to list")
     translate.set("data_deleteoflist","delete of list")
@@ -77,6 +113,7 @@ export default() => {
     translate.set("data_replaceitemoflist","replace item of list")
     translate.set("data_showlist","show list")
     translate.set("data_hidelist","hide list")
+    translate.set("data_itemoflist","item of list")
     //procedures
     /*
     translate.set("motion_movesteps","move")
@@ -86,14 +123,6 @@ export default() => {
     translate.set("motion_movesteps","move")
     translate.set("motion_movesteps","move")
     */
-
-
-
-
-
-
-    translate.set("data_showvariable", "show variable")
-
     return translate
 }
 

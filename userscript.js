@@ -12,7 +12,7 @@ export default async function ({ addon, console, msg }) {
   const inputsOPs = ['math_number', 'math_positive_number', "math_whole_number", 'motion_goto_menu', "text", "argument_reporter_string_number"]
   const ignoreBlocks = ["procedures_prototype"]
   const Cblocks = ["control_forever", "control_if", "control_repeat", "control_if_else", "control_repeat_until", "control_while"]
-  const fieldsMenu = ["VARIABLE", "EFFECT", "FORWARD_BACKWARD", "FRONT_BACK", "BROADCAST_OPTION", "KEY_OPTION", "BACKDROP", "STOP_OPTION", "DRAG_MODE", "LIST"]
+  const fieldsMenu = ["VARIABLE", "EFFECT", "FORWARD_BACKWARD", "FRONT_BACK", "BROADCAST_OPTION", "KEY_OPTION", "BACKDROP", "STOP_OPTION", "DRAG_MODE", "LIST", "NUMBER_NAME", "STYLE", "WHENGREATERTHANMENU", "CURRENTMENU"]
 
   let TranslateMap = applyTranslation()
 
@@ -94,7 +94,9 @@ export default async function ({ addon, console, msg }) {
         nextInput = null
       } else { //inner block, more complex
         if (!isEmpty(block.fields)) {//variables menu
-          debug(block.fields["VARIABLE"].name)
+          for(let i in block.fields){
+            debug(block.fields[i].name)
+          }
         }
         let inputs = block.inputs//id
         let a
@@ -165,7 +167,7 @@ export default async function ({ addon, console, msg }) {
     let substacks = new Array()
     let substack = 0
     while (1) {
-      debug(block)
+      //debug(block)
       let opcode = block.opcode
       let inputs = block.inputs
       //var id = block.id
@@ -179,12 +181,12 @@ export default async function ({ addon, console, msg }) {
           substacks[substack].inside = block.inputs["SUBSTACK"].block//get some values in object
           substacks[substack].next = block.next
           afterC = block.next
-          next = block.inputs["SUBSTACK"].block//get next block.id
+          next = block.inputs["SUBSTACK"].block//get next block.id  !!!
         }
       } else {//normal block
         let inputText = ""
         for (var IN in inputs) {
-          if (inputs[IN].name != "SUBSTACK") {
+          if (inputs[IN].name != "SUBSTACK") {//!!!
             inputText += "(" + getInputOfBlock(inputs[IN].block, block, _sprite) + ")"//inputs
           }
         }//each input
@@ -253,8 +255,18 @@ export default async function ({ addon, console, msg }) {
       CodeCell.textContent = ""
       row.appendChild(CodeCell)//</td>
       CodeTable.appendChild(row)//</tr>
+      let comments = ""
       let blocks = _sprite.blocks._blocks
       let _scripts = _sprite.blocks._scripts
+      debug(_sprite.comments)
+      for(let comm in _sprite.comments){
+        comments += "//"+_sprite.comments[comm].text
+      }
+      debug(_scripts)
+      if (isEmpty(_scripts) && isEmpty(_sprite.comments)){
+        CodeCell.textContent += "empty"
+        debug("empty")
+      }
       //debug(_scripts)
       for (let script in _scripts) {
         var ID = _scripts[script]
@@ -357,7 +369,7 @@ export default async function ({ addon, console, msg }) {
         CodeCell.textContent += "\r\n";
         //}
       }//each top block
-
+      CodeCell.textContent += "\r\n"+comments;
       /*CodeCell.textContent = hljs.highlight(CodeCell.textContent,
         { language: 'js' }
       ).value*/
