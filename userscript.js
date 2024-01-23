@@ -1,13 +1,21 @@
 /*Some parts of the code are used from the Variable Manager.*/
+import applyTranslation from "./TranslateBlocks.js";
 export default async function ({ addon, console, msg }) {
   const vm = addon.tab.traps.vm;
   const debug = console.log;
+  const warn = console.warn;
+  const error = console.error;
+  
   const OnlyEditingTarget = addon.settings.get("target");
+  const EnableTranslation = addon.settings.get("translate")
 
-  let inputsOPs = ['math_number', 'math_positive_number', "math_whole_number", 'motion_goto_menu', "text", "argument_reporter_string_number"]
-  let ignoreBlocks = ["procedures_prototype"]
-  let Cblocks = ["control_forever", "control_if", "control_repeat", "control_if_else", "control_repeat_until", "control_while"]
-  let fieldsMenu = ["VARIABLE", "EFFECT"]
+  const inputsOPs = ['math_number', 'math_positive_number', "math_whole_number", 'motion_goto_menu', "text", "argument_reporter_string_number"]
+  const ignoreBlocks = ["procedures_prototype"]
+  const Cblocks = ["control_forever", "control_if", "control_repeat", "control_if_else", "control_repeat_until", "control_while"]
+  const fieldsMenu = ["VARIABLE", "EFFECT", "FORWARD_BACKWARD", "FRONT_BACK", "BROADCAST_OPTION", "KEY_OPTION", "BACKDROP", "STOP_OPTION", "DRAG_MODE", "LIST"]
+
+  let TranslateMap = applyTranslation()
+
   let preventUpdate = false;
   let myTabID = 4;
   const manager = document.createElement("div");
@@ -33,7 +41,13 @@ export default async function ({ addon, console, msg }) {
   const textTabText = document.createElement("span");
   textTabText.innerText = msg("code");
   textTab.appendChild(textTabText);
-  function translateBlocksToText() {
+  function translateBlocksToText(opcode) {
+    if (TranslateMap.has(opcode)&&EnableTranslation){
+      return TranslateMap.get(opcode)
+    }else{
+      console.warn("Translation missing: "+opcode+" Please report it in isues https://github.com/matej2005/blocks2text/issues")
+      return opcode
+    }
   }
   function convertInput(input, value) {
     if (input === 'math_number' || input === 'math_positive_number' || input === "text") return "(" + value + ")"
@@ -91,7 +105,7 @@ export default async function ({ addon, console, msg }) {
         }
       }
       if (!_Ins) {
-        out = _opcode + "(" + out + ")"
+        out = translateBlocksToText(_opcode) + "(" + out + ")"
       }
       return out
     }
@@ -156,7 +170,7 @@ export default async function ({ addon, console, msg }) {
       let afterC
       if (Cblocks.includes(opcode)) {//C block
         if ("SUBSTACK" in block.inputs) {
-          text += "\r\n" + "\tab".repeat(substack) + opcode + "{\r\n"
+          text += "\r\n" + "\tab".repeat(substack) + translateBlocksToText(opcode) + "{\r\n"
           substack++//increase counter
           substacks[substack] = new Object //create new object for each substack
           substacks[substack].inside = block.inputs["SUBSTACK"].block//get some values in object
@@ -171,7 +185,7 @@ export default async function ({ addon, console, msg }) {
             inputText += "(" + getInputOfBlock(inputs[IN].block, block, _sprite) + ")"//inputs
           }
         }//each input
-        text += "\tab".repeat(substack) + opcode + inputText + "\r\n"
+        text += "\tab".repeat(substack) + translateBlocksToText(opcode) + inputText + "\r\n"
 
         //text += "\t".repeat(substack) + opcode + "\r\n"
         debug(opcode)
@@ -271,7 +285,7 @@ export default async function ({ addon, console, msg }) {
                 Block.tabs++
                 Block.text += "\tab";
               }
-              Block.text += Block.opcode
+              Block.text += translateBlocksToText(Block.opcode)
               /*if (Cblocks.includes(blockOpcode)) {
                 handleSubstack(block, _sprite)
                 text += "{"
@@ -292,6 +306,8 @@ export default async function ({ addon, console, msg }) {
                 var sMenu = block.fields[mn]
                 if (fieldsMenu.includes(sMenu.name)) {
                   Block.menu = "[" + sMenu.value + "]"
+                }else{
+                  console.warn("Unknow value: "+sMenu.name+" Please report it in isues https://github.com/matej2005/blocks2text/issues")
                 }
               }
               Block.text += Block.menu
@@ -348,8 +364,6 @@ export default async function ({ addon, console, msg }) {
   }
   function fullReload() {
     if (addon.tab.redux.state?.scratchGui?.editorTab?.activeTabIndex !== myTabID) return;
-    translateBlocksToText();
-
     while (CodeTable.firstChild) {
       CodeTable.removeChild(CodeTable.firstChild);
     }

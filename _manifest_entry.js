@@ -25,6 +25,12 @@ const manifest = {
       "name": "Only editing target",
       "default": false,
       "type": "boolean"
+    },
+    {
+      "id": "translate",
+      "name": "Enable tranlating eg.:motion_movesteps > move steps",
+      "default": false,
+      "type": "boolean"
     }
   ],
   "dynamicDisable": true,
