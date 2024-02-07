@@ -23,12 +23,18 @@ const manifest = {
     {
       "id": "target",
       "name": "Only editing target",
-      "default": false,
+      "default": true,
       "type": "boolean"
     },
     {
       "id": "translate",
       "name": "Enable tranlating eg.:motion_movesteps > move steps",
+      "default": true,
+      "type": "boolean"
+    },
+    {
+      "id": "highlight",
+      "name": "Enable highlightJS. (Very buggy)",
       "default": false,
       "type": "boolean"
     }

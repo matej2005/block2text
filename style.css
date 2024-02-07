@@ -1,3 +1,11 @@
+
+
+
+@import url(./highlight/styles/stackoverflow-dark.css);
+
+
+
+
 /* Change z-indexes to allow more than 3 tabs */
 [class*="gui_tab_"][class*="gui_is-selected_"] {
     z-index: 10 !important;
@@ -56,3 +64,14 @@
 [theme="dark"] .sa-block-to-text td {
   border-color: #333;
 }
+
+
+pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1em
+}
+code.hljs {
+  padding: 3px 5px
+}
+
