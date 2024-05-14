@@ -11,10 +11,10 @@ IDEA
 export default() => {
     const translate = new Map()
     //Motion
-    translate.set("motion_movesteps","move steps")
+    translate.set("motion_movesteps","move ")
     translate.set("motion_turnright", "turn right")
     translate.set("motion_turnleft", "turn left")
-    translate.set("motion_goto", "go to")
+    translate.set("motion_goto", "goto")
     translate.set("motion_gotoxy", "go to xy")
     translate.set("motion_glideto", "glide to")
     translate.set("motion_glidesecstoxy", "glide secs to xy")

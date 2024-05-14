@@ -1,5 +1,6 @@
 /*Some parts of the code are used from the Variable Manager.*/
 import applyTranslation from "./TranslateBlocks.js";
+import { Repr, BinOp, Block2, UnOp } from "./blocks";
 //highlight.js
 import hljs from "./highlight/es/highlight.js";
 import javascript from './highlight/es/languages/javascript.js';
@@ -50,11 +51,11 @@ export default async function ({ addon, console, msg }) {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[{]}|;:,<.>/?';
     let result = '';
     for (let i = 0; i < length; i++) {
-        const randomIndex = Math.floor(Math.random() * characters.length);
-        result += characters[randomIndex];
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      result += characters[randomIndex];
     }
     return result;
-}
+  }
   function translateBlocksToText(opcode) {
     if (TranslateMap.has(opcode) && EnableTranslation) {
       return TranslateMap.get(opcode)
@@ -91,10 +92,8 @@ export default async function ({ addon, console, msg }) {
   function getInputOfBlock(input /*only ID of input*/, block, sprite) {
     let blocks = sprite.blocks._blocks;//blocks in sprite
 
-    let Block = new Object()
-    Block.nextInput = null
-
-
+    let Block = new Object();
+    Block.nextInput = null;
 
     function getInputValue(block, _opcode, _Ins) {//get values of complex input
       if (block == undefined) return
@@ -113,19 +112,19 @@ export default async function ({ addon, console, msg }) {
       } else { //inner block, more complex
         if (!isEmpty(block.fields)) {//variables menu
           for (let i in block.fields) {
-            debug(block.fields[i].name)
+            debug(block.fields[i].name);
           }
         }
         let inputs = block.inputs//id
         for (let IN in inputs) {
-          Block.nextInput = inputs[IN].block
-          out += getOneInputCell(Block.nextInput, block.opcode)
+          Block.nextInput = inputs[IN].block;
+          out += getOneInputCell(Block.nextInput, block.opcode);
         }
       }
       if (!_Ins) {
         out = translateBlocksToText(_opcode) + "(" + out + ")"
       }
-      return out
+      return out;
     }
     function getOneInputCell(_nextInput, _opcode, _Ins) {
       Block.nextInput = _nextInput
@@ -138,12 +137,12 @@ export default async function ({ addon, console, msg }) {
           out += "" + getInputValue(blocks[Block.nextInput], _opcode, _Ins)
         } else {
           //out += "".repeat(closeN-_Ins)
-          return out
+          return out;
         }
         if (InCouter == 0) {
-          return out
+          return out;
         }
-        InCouter--
+        InCouter--;
       }
     }
     let out = ""
@@ -157,14 +156,24 @@ export default async function ({ addon, console, msg }) {
       }
     } else {//complex input
       for (let IN in inputs) {
-        Block.nextInput = inputs[IN].block
-        out += getOneInputCell(Block.nextInput, opcode, Ins)
-        Ins++
+        Block.nextInput = inputs[IN].block;
+        out += getOneInputCell(Block.nextInput, opcode, Ins);
+        Ins++;
       }
       //return "("+out+")"
-      return out
+      return out;
     }
-    return null
+    return null;
+  }
+  function handleTopBlock(_block, _sprite){
+    let mutation = _sprite.blocks._blocks[_block.inputs.custom_block.block].mutation
+    let out = mutation.proccode.replace(/%s/g, function (match) {
+      return "(" + JSON.parse(mutation.argumentnames).shift() + ")"
+    });
+    out = out.replace(/%b/g, function (match) {
+      return "<" + JSON.parse(mutation.argumentnames)[1] + ">";//bolean
+    });
+    return "proc " + out + "{"
   }
   function handleBlockDefinition(_block, _sprite) {
     let mutation = _sprite.blocks._blocks[_block.inputs.custom_block.block].mutation
@@ -174,30 +183,30 @@ export default async function ({ addon, console, msg }) {
     out = out.replace(/%b/g, function (match) {
       return "<" + JSON.parse(mutation.argumentnames)[1] + ">";//bolean
     });
-    return "function " + out + "{"
+    return "proc " + out + "{"
   }
   function handleSubstack(_block, _sprite, inDefinition) {
     let Substack = new Object();
     Substack.blocks = _sprite.blocks._blocks;
-    Substack.text = ""
-    Substack.block = _block
-    Substack.start = 0
-    Substack.safeCounter = 10
+    Substack.text = "";
+    Substack.block = _block;
+    Substack.start = 0;
+    Substack.safeCounter = 10;
 
-    let block = _block
-    let substacks = new Array()
+    let block = _block;
+    let substacks = new Array();
     if (inDefinition) {
-      Substack.start = 1
+      Substack.start = 1;
     }
-    let substack = Substack.start
+    let substack = Substack.start;
     while (1) {
       //debug(block)
-      let opcode = block.opcode
-      let inputs = block.inputs
+      let opcode = block.opcode;
+      let inputs = block.inputs;
       //var id = block.id
-      let next = block.next
-      let afterC
-      if (Cblocks.includes(opcode)) {//C block
+      let next = block.next;
+      let afterC;
+      if (Cblocks.includes(opcode) | opcode == "event_whenflagclicked") {//C block
         if ("SUBSTACK" in block.inputs) {
           Substack.text += "\r\n" + "\tab".repeat(substack) + translateBlocksToText(opcode) + "{\r\n"
           substack++//increase counter
@@ -208,7 +217,7 @@ export default async function ({ addon, console, msg }) {
           next = block.inputs["SUBSTACK"].block//get next block.id  !!!
         }
       } else {//normal block
-        let inputText = ""
+        let inputText = "";
         for (var IN in inputs) {
           if (inputs[IN].name != "SUBSTACK") {//!!!
             inputText += "(" + getInputOfBlock(inputs[IN].block, block, _sprite) + ")"//inputs
@@ -225,24 +234,24 @@ export default async function ({ addon, console, msg }) {
           substack --
         }else{*/
         if (next != undefined) {//next block
-          next = block.next
+          next = block.next;
         } else {//return after C
           if (!isEmpty(substacks[substack])) {
             if (substacks[substack].next == null) {
               debug(substacks[substack])
-              Substack.text += "\tab".repeat(substack) + "}\r\n"
-              substack--
+              Substack.text += "\tab".repeat(substack) + "}\r\n";
+              substack--;
             } else {
-              next = substacks[substack].next
+              next = substacks[substack].next;
             }
           }
           //debug("next: "+block.next)
           //text += "" + "\t".repeat(substack) + "}\r\n"
-          substack--
+          substack--;
           if (substack <= Substack.start) {
-            substack = Substack.start
+            substack = Substack.start;
           }
-          Substack.text += "" + "\tab".repeat(substack) + "}\r\n"
+          Substack.text += "" + "\tab".repeat(substack) + "}\r\n";
           if (substack === Substack.start) {
             break;
           }
@@ -254,22 +263,22 @@ export default async function ({ addon, console, msg }) {
       if (next != undefined) {
         block = Substack.blocks[next]                 //get block[id]
       }
-      Substack.safeCounter--
+      Substack.safeCounter--;
     }
-    debug(Substack.text)
-    return Substack.text
+    debug(Substack.text);
+    return Substack.text;
   }
   function printText() {
-    const editingTarget = vm.runtime.getEditingTarget()
+    const editingTarget = vm.runtime.getEditingTarget();
     //debug(vm)
     //let sprite = new Set(vm.runtime.targets.map((i) => i.sprite))
-    let sprites = new Set(vm.runtime.targets)
+    let sprites = new Set(vm.runtime.targets);
     //debug(vm.runtime.targets)
     //const editingTarget = vm.runtime.getEditingTarget();
     //debug(editingTarget);
     //debug(sprite)
     if (OnlyEditingTarget) {
-      sprites = [editingTarget]
+      sprites = [editingTarget];
     }
     sprites.forEach((_sprite, i) => {//sprites
       debug(_sprite)
@@ -283,11 +292,11 @@ export default async function ({ addon, console, msg }) {
       //CodeCell.textContent = ""
       row.appendChild(CodeCell)//</td>
       CodeTable.appendChild(row)//</tr>
-      let Sprite = new Object()
-      Sprite.text = ""
-      Sprite.comments = ""
-      Sprite.blocks = _sprite.blocks._blocks
-      Sprite._scripts = _sprite.blocks._scripts
+      let Sprite = new Object();
+      Sprite.text = "";
+      Sprite.comments = "";
+      Sprite.blocks = _sprite.blocks._blocks;
+      Sprite._scripts = _sprite.blocks._scripts;
       //debug(_sprite.comments)
       for (let comm in _sprite.comments) {
         if (_sprite.comments[comm].blockId == null) { //exclude comments attached to block, it will be procesed later
@@ -296,41 +305,64 @@ export default async function ({ addon, console, msg }) {
       }
       //debug(_scripts)
       if (isEmpty(Sprite._scripts) && isEmpty(_sprite.comments)) {
-        Sprite.text += "empty"
-        debug("empty")
+        Sprite.text += "empty";
+        debug("empty");
       }
       //debug(_scripts)
       for (let script in Sprite._scripts) {
-        let Script = new Object()
-        Script.inside = false
-        Script.id = Sprite._scripts[script]
-        Script.text =""
+        let Script = new Object();
+        Script.inside = false;
+        Script.id = Sprite._scripts[script];
+        Script.text = "";
         //Script.fallback = null
         for (let bl in Sprite.blocks) {//blocks
           function handleBlock(_ID, _sprite) {
-            let Block = _sprite.blocks._blocks[_ID]
-            Block.input = ""
-            Block.text = ""
-            Block.inside = Script.inside
+            let Block = _sprite.blocks._blocks[_ID];
+            //gobo script
+            let gscode = Block2.opcode(Block.opcode);
+            let gsname = Block2.name(gscode);
+            
+            Block.gs = {};
+            Block.gs.code = Block2.opcode(Block.opcode);
+            Block.gs.name = Block2.name(gscode);
+            Block.gs.args = Block2.args(gscode);
+            Block.gs.fields = Block2.fields(gscode);
+          
+          
+            Block.input = "";
+            Block.text = "";
+            Block.inside = Script.inside;
             //Block.fallback = fallback
             //Block.input = getInputOfBlock
             //Block.Cblock = false
-            Block.script = Sprite._scripts[script]
-            Block.sprite = _sprite.id
-            debug(Block)
+            Block.script = Sprite._scripts[script];
+            Block.sprite = _sprite.id;
             if (Block.opcode === "procedures_definition") {//handle procedures = custom blocks
               Block.text += handleBlockDefinition(Block, _sprite)
-              Block.inside = true
-              Block.procedure = true
+              Block.inside = true;
+              Block.procedure = true;
             } else {
-              Block.procedure = false
+              Block.procedure = false;
               Block.text += "\r\n";
               if (Block.inside) {
-                Block.tabs++
+                Block.tabs++;
                 Block.text += "\tab";
               }
 
-              Block.text += translateBlocksToText(Block.opcode)
+
+              /*console.log(gsname);
+              console.log(Block2.fields(gscode));
+              console.log(Block2.args(gscode));*/
+
+              if (gsname in Block2.all_names) {
+                Block.type = "bl";
+                Block.text += gsname;
+              } else {
+                Block.text += translateBlocksToText(Block.opcode);
+                if (Repr.all_names(gsname)) {
+                  Block.type = "rep";
+                }
+              }
               /*if (Cblocks.includes(blockOpcode)) {
                 handleSubstack(block, _sprite)
                 text += "{"
@@ -363,18 +395,24 @@ export default async function ({ addon, console, msg }) {
                 }
               }//each input
               Block.text += Block.input//inputs
+              debug(Block);
 
             }
             //add comment atached to block
+
+
+
             if (Block.comment != undefined) {
               Block.text += "\tab" + "//" + _sprite.comments[Block.comment].text;
             }
             debug("opcode: " + Block.opcode + ", id: " + Block.id + ", next: " + Block.next + ", top: " + Sprite.blocks[Script.id].topLevel + ", inside: " + Block.inside)
+
+
             //return Block
-            return Block
+            return Block;
           }
-          let nextID = Sprite.blocks[Script.id].next
-          let block = Sprite.blocks[Script.id]
+          let nextID = Sprite.blocks[Script.id].next;
+          let block = Sprite.blocks[Script.id];
           if (!inputsOPs.includes(block.opcode) || !ignoreBlocks.includes(block.opcode)) {
             if (Cblocks.includes(block.opcode)) {
               Script.text += handleSubstack(block, _sprite, block.inside)
@@ -384,17 +422,17 @@ export default async function ({ addon, console, msg }) {
             //CodeCell.textContent += handleBlock(ID, _sprite)
             if (nextID == undefined) {
               if (block.inside) {
-                Script.text += "\r\n}"
+                Script.text += "\r\n}";
                 if (fallback != undefined) {
-                  Script.id = Sprite.blocks[fallback].next
+                  Script.id = Sprite.blocks[fallback].next;
                 }
-                block.inside = false
-                break
+                block.inside = false;
+                break;
               } else {
-                break
+                break;
               }
             } else {
-              Script.id = nextID
+              Script.id = nextID;
             }
           }
 
@@ -404,7 +442,7 @@ export default async function ({ addon, console, msg }) {
         //CodeCell.textContent += "\r\n";
         //}
 
-        Sprite.text += Script.text
+        Sprite.text += Script.text;
       }//each top block
       Sprite.text += "\r\n" + Sprite.comments;
       //text += "text \n text"
@@ -426,8 +464,8 @@ export default async function ({ addon, console, msg }) {
       //}
       //vm.Blocks.createBlock(block)*/
       //debug(text)
-      debug(Sprite.text)
-      CodeCell.textContent = Sprite.text
+      debug(Sprite.text);
+      CodeCell.textContent = Sprite.text;
       if (EnableHighlight) {
         CodeCell.innerHTML = hljs.highlight(CodeCell.innerHTML, { language: 'javascript' }).value
       }
@@ -438,6 +476,8 @@ export default async function ({ addon, console, msg }) {
       CodeCell.innerHTML = CodeCell.innerHTML.replace(/\tab?/g, '&emsp;')//hack for inserting tab space
 
       debug("done")
+
+
 
     });//each sprite
   }
